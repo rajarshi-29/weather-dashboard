@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Dashboard</title>
+
+    <!-- ✅ Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
+    <div
+      class="w-full max-w-md bg-gray-800 rounded-2xl shadow-xl p-6 space-y-6 text-center animate-fadeIn"
+    >
+      <h1 class="text-3xl font-bold text-blue-400">🌦️ Weather Dashboard</h1>
+
+      <!-- Input Section -->
+      <div class="flex items-center gap-3">
+        <input
+          type="text"
+          id="city-input"
+          placeholder="Enter city name"
+          class="flex-grow bg-gray-700 text-white rounded-lg px-3 py-2 outline-none placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          id="add-city-btn"
+          class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium transition"
+        >
+          Add
+        </button>
+      </div>
+
+      <!-- Saved Cities -->
+      <div>
+        <h2 class="text-xl font-semibold mb-2 text-blue-300">Saved Cities</h2>
+        <ul id="city-list" class="space-y-2 text-left"></ul>
+      </div>
+
+      <!-- Weather Info -->
+      <div>
+        <h2 class="text-xl font-semibold mb-2 text-blue-300">Weather Info</h2>
+        <div
+          id="weather-container"
+          class="bg-gray-700 rounded-lg p-4 text-center text-gray-200"
+        >
+          <p>Select a city to view its weather information.</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const API_KEY = "5f56d525d1619d0a2cd2eac4ce55588e"; // Replace with your own OpenWeather API Key
+        const cityInput = document.getElementById("city-input");
+        const addCityBtn = document.getElementById("add-city-btn");
+        const cityList = document.getElementById("city-list");
+        const weatherContainer = document.getElementById("weather-container");
+
+        let cities = JSON.parse(localStorage.getItem("cities")) || [];
+
+        renderCities();
+
+        // Add city to the list
+        addCityBtn.addEventListener("click", () => {
+          const city = cityInput.value.trim();
+          if (city && !cities.includes(city)) {
+            cities.push(city);
+            saveCities();
+            renderCities();
+          }
+          cityInput.value = "";
+        });
+
+        // When clicking a city → fetch its weather
+        cityList.addEventListener("click", async (e) => {
+          if (e.target.tagName === "LI") {
+            const city = e.target.textContent;
+            const weatherData = await fetchWeatherData(city);
+            if (weatherData) displayWeather(weatherData);
+          }
+        });
+
+        function renderCities() {
+          cityList.innerHTML = "";
+          if (cities.length === 0) {
+            cityList.innerHTML =
+              '<p class="text-gray-400 text-sm">No cities added yet.</p>';
+            return;
+          }
+
+          cities.forEach((city) => {
+            const li = document.createElement("li");
+            li.textContent = city;
+            li.className =
+              "bg-gray-700 hover:bg-blue-600 cursor-pointer px-3 py-2 rounded-lg transition";
+            cityList.appendChild(li);
+          });
+        }
+
+        async function fetchWeatherData(city) {
+          const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`;
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("City not found");
+            const data = await response.json();
+            return data;
+          } catch (error) {
+            weatherContainer.innerHTML = `<p class="text-red-400">❌ ${error.message}</p>`;
+          }
+        }
+
+        function displayWeather(data) {
+          const icon = data.weather[0].icon;
+          const desc = data.weather[0].description;
+          const temp = data.main.temp;
+
+          weatherContainer.innerHTML = `
+            <div class="flex flex-col items-center space-y-2">
+              <h3 class="text-2xl font-semibold text-blue-400">${data.name}</h3>
+              <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}" />
+              <p class="text-lg">${desc.charAt(0).toUpperCase() + desc.slice(1)}</p>
+              <p class="text-2xl font-bold">${temp.toFixed(1)}°C</p>
+            </div>
+          `;
+        }
+
+        function saveCities() {
+          localStorage.setItem("cities", JSON.stringify(cities));
+        }
+      });
+    </script>
+
+    <style>
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-fadeIn {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+    </style>
+  </body>
+</html>
