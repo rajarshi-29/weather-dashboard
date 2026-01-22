@@ -3,6 +3,7 @@
 A simple weather dashboard that allows users to search for cities and view real-time weather information using the OpenWeather API. The application focuses on client-side API integration, asynchronous JavaScript, and responsive UI design.
 
 🔗 **Live Demo:** https://weather-dashboard-beta-liart.vercel.app  
+
 📦 **Source Code:** https://github.com/rajarshi-29/weather-dashboard
 
 ---
